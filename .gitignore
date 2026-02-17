@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Data (do not commit Kaggle CSVs)
+data_raw/
+data_processed/
+*.csv
+*.parquet
