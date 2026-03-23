@@ -1,5 +1,5 @@
 pandas
-numpy
+numpy<=2.3
 pyarrow
 matplotlib
 seaborn
@@ -7,3 +7,4 @@ scikit-learn
 statsmodels
 xgboost
 jupyter
+shap
