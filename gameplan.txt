@@ -1,0 +1,272 @@
+1. 01_data_foundation_and_feature_store.ipynb
+
+shared foundation for all later work.
+
+load all CSVs
+build a unified master race-level table
+build aggregated lap, pit stop, sprint, standings, and circuit features
+standardize keys, dates, and rolling features
+output reusable modeling tables to data_processed/
+
+use the entire CSV library as a database.
+
+
+
+2. 02_points_finish_classification.ipynb
+
+initial project, cleaned and finalized.
+
+Techniques shown:
+
+logistic regression
+tree-based methods
+calibration
+SHAP
+temporal train/test split
+
+
+
+3. 03_finishing_position_regression.ipynb
+
+focus on predicting finishing position instead of binary points.
+
+Best techniques:
+
+multiple linear regression as a baseline
+regularized regression
+tree-based regression
+ordinal framing discussion
+
+Important note: finishing position is ordered and bounded, so plain linear regression is useful as a baseline, but not perfect. You can still use it to demonstrate regression diagnostics and residual analysis very effectively.
+
+
+
+
+4. 04_race_strategy_and_pit_stop_modeling.ipynb
+
+focus on in-race tactical variables.
+
+Possible targets:
+
+finishing position improvement relative to grid
+whether a driver outperformed qualifying expectation
+total race time rank if available
+undercut/strategy effectiveness proxy
+
+Features:
+
+pit stop count
+average pit duration
+lap-time aggregates
+sprint results
+circuit type
+weather (add it externally)
+
+demonstrates:
+
+nonlinear effects
+tree-based methods
+interaction effects
+monotonic vs non-monotonic relationships
+
+
+
+5. 05_distribution_shape_and_dimensionality.ipynb
+
+statistics-forward notebook.
+
+demonstrate:
+shape of distributions
+skewness, kurtosis, heavy tails
+transformations
+PCA
+correlation structure
+multicollinearity diagnostics
+
+good place to explore:
+
+lap times
+pit stop durations
+finishing positions
+points distributions across eras
+circuit feature reduction with PCA
+
+
+
+6. 06_resampling_and_model_stability.ipynb
+
+Include:
+
+bootstrap confidence intervals
+cross-validation
+rolling-origin validation
+permutation importance
+sensitivity to train/test windows
+
+
+
+7. 07_simulation_and_counterfactuals.ipynb
+
+Use Monte Carlo to simulate:
+
+season outcomes under different reliability assumptions
+podium/points probabilities under alternative qualifying outcomes
+constructor standings under weather or pit-stop shock scenarios
+
+
+
+8. 08_causal_or_quasi_causal_experiments.ipynb
+
+instrumental variables — but only if the question truly supports it.
+
+A possible IV-style question might be:
+
+effect of qualifying position on finishing outcome, where qualifying is endogenous and instrumented by something plausibly exogenous to race-day finishing conditional on controls
+
+Mapping:
+
+Generalized linear modeling
+use cases:
+
+binary points finish
+podium finish
+DNF probability
+count models for pit stops for Poisson or negative binomial
+
+Multiple linear regression
+use cases:
+
+finishing position
+change from grid to finish
+average lap pace differential
+points scored per race as a continuous proxy
+
+Monotonic and non-monotonic relationships
+use cases:
+
+qualifying position vs probability of points
+pit stops vs finishing gain
+DNF rate vs scoring probability
+weather severity vs variance in outcomes
+track length or altitude vs reliability/performance
+
+Tree models and partial dependence plots
+
+Shape of distributions
+use cases:
+
+lap times
+pit stop durations
+points by era
+constructor dominance
+finishing position residuals
+qualifying-to-finish deltas
+
+Tree-based methods
+use cases:
+
+points classification
+finishing position regression
+strategy effectiveness
+DNF probability
+
+PCA
+use cases:
+
+reducing circuit characteristics
+reducing lap-time summary features
+compressing correlated performance indicators
+
+Resampling methods
+Use for:
+
+model stability
+uncertainty around AUC/RMSE
+feature importance stability
+confidence intervals around simulated outcomes
+
+Linear discriminant analysis
+use cases:
+create a cleaner classification target first
+
+points vs no points
+podium vs non-podium
+top-half vs bottom-half finish
+less flexible than logistic regression, but useful to demonstrate classical statistical ML.
+
+Monte Carlo simulation
+use cases:
+
+season simulation
+race scenario simulation
+constructor points under different reliability assumptions
+counterfactual starting positions
+Instrumental variables
+
+must define a credible causal question first
+
+
+I would make your next experiment:
+
+03_finishing_position_regression.ipynb
+
+Because it naturally extends the current project and lets you demonstrate:
+
+multiple linear regression
+tree-based regression
+distribution analysis
+residual diagnostics
+monotonic vs non-monotonic effects
+resampling for RMSE stability
+
+A strong framing would be:
+Can we predict a driver’s finishing position using pre-race information, recent form, reliability, circuit characteristics, and race-strategy proxies?
+
+Then after that, do:
+04_race_strategy_and_pit_stop_modeling.ipynb
+
+That notebook would let you bring in:
+
+pit stops
+lap times
+track-specific features
+weather if added externally
+nonlinear relationships
+simulation
+A practical roadmap
+
+structure the next few experiments like this:
+
+Finishing position regression
+DNF probability / reliability model
+Race strategy and pit-stop effectiveness
+Distribution diagnostics + PCA
+Monte Carlo season simulation
+Causal/IV notebook only if we can defend the design
+Important note on weather and tire compounds
+
+current Kaggle CSV library does not natively include detailed weather or tire compound data. So:
+
+track-specific features can be built now from circuits and races
+pit stops can be built now
+weather likely requires an external dataset
+tire compounds likely require an external dataset unless you find a supplementary source
+
+show data integration skills.
+
+next script ---->
+
+Create a new notebook called:
+03_finishing_position_regression.ipynb
+
+sections:
+setup and imports
+load shared processed table
+define regression target
+inspect target distribution
+build linear baseline
+diagnose residuals
+fit tree-based regressor
+compare RMSE / MAE
+analyze nonlinear effects
+bootstrap performance intervals
