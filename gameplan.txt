@@ -270,3 +270,7 @@ fit tree-based regressor
 compare RMSE / MAE
 analyze nonlinear effects
 bootstrap performance intervals
+
+
+
+can i predict which team will win the world championship each year? how accurately can i predict it using what i have learned about the data?
