@@ -37,7 +37,8 @@ regularized regression
 tree-based regression
 ordinal framing discussion
 
-Important note: finishing position is ordered and bounded, so plain linear regression is useful as a baseline, but not perfect. You can still use it to demonstrate regression diagnostics and residual analysis very effectively.
+Important note: finishing position is ordered and bounded, so plain linear regression is useful as a baseline, but not perfect. 
+Can still use it to demonstrate regression diagnostics and residual analysis very effectively.
 
 
 
@@ -102,6 +103,12 @@ cross-validation
 rolling-origin validation
 permutation importance
 sensitivity to train/test windows
+
+Design a clean modeling dataset (final feature set)
+Build a robust pipeline (with transformations + CV)
+
+Interpret PCA components economically
+Build a causal-style model (driver vs constructor effects)
 
 
 
@@ -206,11 +213,7 @@ Instrumental variables
 must define a credible causal question first
 
 
-I would make your next experiment:
-
 03_finishing_position_regression.ipynb
-
-Because it naturally extends the current project and lets you demonstrate:
 
 multiple linear regression
 tree-based regression
@@ -219,13 +222,12 @@ residual diagnostics
 monotonic vs non-monotonic effects
 resampling for RMSE stability
 
-A strong framing would be:
+framing the question:
 Can we predict a driver’s finishing position using pre-race information, recent form, reliability, circuit characteristics, and race-strategy proxies?
 
-Then after that, do:
-04_race_strategy_and_pit_stop_modeling.ipynb
 
-That notebook would let you bring in:
+04_race_strategy_and_pit_stop_modeling.ipynb
+bring in:
 
 pit stops
 lap times
@@ -235,7 +237,7 @@ nonlinear relationships
 simulation
 A practical roadmap
 
-structure the next few experiments like this:
+next few experiments structure:
 
 Finishing position regression
 DNF probability / reliability model
@@ -249,14 +251,11 @@ current Kaggle CSV library does not natively include detailed weather or tire co
 
 track-specific features can be built now from circuits and races
 pit stops can be built now
-weather likely requires an external dataset
-tire compounds likely require an external dataset unless you find a supplementary source
+weather requires an external dataset
+tire compounds require an external dataset 
 
 show data integration skills.
 
-next script ---->
-
-Create a new notebook called:
 03_finishing_position_regression.ipynb
 
 sections:
