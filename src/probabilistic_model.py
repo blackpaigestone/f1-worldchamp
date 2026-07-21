@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -132,9 +133,7 @@ class CumulativeOrdinalLogit:
         x_array = self.imputer.transform(x)
         x_array = self.scaler.transform(x_array)
         x_array = np.clip(x_array, -self.clip_value, self.clip_value)
-        cumulative = np.column_stack(
-            [model.predict_proba(x_array)[:, 1] for model in self.models]
-        )
+        cumulative = self._predict_raw_cumulative_array(x_array)
 
         # Independent threshold models can cross. A cumulative maximum is a
         # deterministic monotonic repair before converting CDFs to masses.
@@ -166,6 +165,117 @@ class CumulativeOrdinalLogit:
         if np.any(row_sums <= 0):
             raise ValueError("At least one predicted distribution has no probability mass")
         return probabilities / row_sums
+
+    def _predict_raw_cumulative_array(self, x_array: np.ndarray) -> np.ndarray:
+        return np.column_stack(
+            [model.predict_proba(x_array)[:, 1] for model in self.models]
+        )
+
+    def predict_cumulative(
+        self,
+        x: pd.DataFrame,
+        repair: bool = False,
+    ) -> np.ndarray:
+        """Return threshold CDFs before or after monotonic repair."""
+        if not self.models:
+            raise RuntimeError("Model must be fitted before prediction")
+        x_array = self.imputer.transform(x)
+        x_array = self.scaler.transform(x_array)
+        x_array = np.clip(x_array, -self.clip_value, self.clip_value)
+        cumulative = self._predict_raw_cumulative_array(x_array)
+        return np.maximum.accumulate(cumulative, axis=1) if repair else cumulative
+
+
+class ProportionalOddsLogit:
+    """True ordinal logistic model with shared coefficients and ordered cuts."""
+
+    def __init__(
+        self,
+        max_position: int = MAX_POSITION,
+        max_iter: int = 500,
+        clip_value: float = 10.0,
+        min_probability: float = 1e-6,
+    ) -> None:
+        self.max_position = max_position
+        self.max_iter = max_iter
+        self.clip_value = clip_value
+        self.min_probability = min_probability
+        self.imputer = SimpleImputer(strategy="median", add_indicator=True)
+        self.scaler = StandardScaler()
+        self.nonconstant_mask_: np.ndarray | None = None
+        self.center_offset_: np.ndarray | None = None
+        self.model: Any | None = None
+        self.result = None
+        self.classes_: np.ndarray | None = None
+
+    def fit(self, x: pd.DataFrame, y: pd.Series | np.ndarray) -> "ProportionalOddsLogit":
+        try:
+            from statsmodels.miscmodels.ordinal_model import OrderedModel
+        except ImportError as error:
+            raise ImportError(
+                "ProportionalOddsLogit requires statsmodels. Install it with "
+                "`python -m pip install statsmodels`."
+            ) from error
+        x_array = self.imputer.fit_transform(x)
+        feature_variance = np.var(x_array, axis=0)
+        self.nonconstant_mask_ = np.isfinite(feature_variance) & (feature_variance > 1e-12)
+        if not self.nonconstant_mask_.any():
+            raise ValueError("No nonconstant predictors remain after preprocessing")
+        x_array = x_array[:, self.nonconstant_mask_]
+        x_array = self.scaler.fit_transform(x_array)
+        # OrderedModel includes threshold intercepts and must not receive a
+        # separate constant. Recenter explicitly, then bypass statsmodels'
+        # rank-based detector, which can mistake correlated predictors for an
+        # implicit intercept even after zero-variance columns are removed.
+        self.center_offset_ = x_array.mean(axis=0, keepdims=True)
+        x_array = x_array - self.center_offset_
+        x_array = np.clip(x_array, -self.clip_value, self.clip_value)
+        y_array = np.asarray(y, dtype=int)
+        self.classes_ = np.sort(np.unique(y_array))
+        self.model = OrderedModel(
+            y_array,
+            x_array,
+            distr="logit",
+            hasconst=False,
+        )
+        self.result = self.model.fit(
+            method="lbfgs",
+            maxiter=self.max_iter,
+            disp=False,
+        )
+        return self
+
+    def predict_proba(
+        self,
+        x: pd.DataFrame,
+        field_size: pd.Series | np.ndarray | None = None,
+    ) -> np.ndarray:
+        if (
+            self.result is None
+            or self.classes_ is None
+            or self.nonconstant_mask_ is None
+            or self.center_offset_ is None
+        ):
+            raise RuntimeError("Model must be fitted before prediction")
+        x_array = self.imputer.transform(x)
+        x_array = x_array[:, self.nonconstant_mask_]
+        x_array = self.scaler.transform(x_array)
+        x_array = x_array - self.center_offset_
+        x_array = np.clip(x_array, -self.clip_value, self.clip_value)
+        predicted = np.asarray(self.result.model.predict(self.result.params, exog=x_array))
+        probabilities = np.zeros((len(x_array), self.max_position), dtype=float)
+        probabilities[:, self.classes_ - 1] = predicted
+
+        positions = np.arange(1, self.max_position + 1)
+        allowed = (
+            positions[None, :] <= np.asarray(field_size, dtype=int)[:, None]
+            if field_size is not None
+            else np.ones_like(probabilities, dtype=bool)
+        )
+        probabilities = np.where(
+            allowed, np.maximum(probabilities, self.min_probability), 0.0
+        )
+        return probabilities / probabilities.sum(axis=1, keepdims=True)
 
 
 def ranked_probability_score(
@@ -312,6 +422,48 @@ def race_coherence_error(
         "mean_row_error": float(np.mean(row_errors)),
         "max_column_error": float(np.max(column_errors)),
         "mean_column_error": float(np.mean(column_errors)),
+    }
+
+
+def distribution_shape_diagnostics(probabilities: np.ndarray) -> dict[str, float]:
+    """Measure roughness, fragmentation, concentration, and effective width."""
+    matrix = np.asarray(probabilities, dtype=float)
+    if matrix.ndim != 2:
+        raise ValueError("probabilities must be a two-dimensional array")
+    local_peaks = (
+        (matrix[:, 1:-1] > matrix[:, :-2])
+        & (matrix[:, 1:-1] > matrix[:, 2:])
+    ).sum(axis=1)
+    local_peaks += (matrix[:, 0] > matrix[:, 1]).astype(int)
+    local_peaks += (matrix[:, -1] > matrix[:, -2]).astype(int)
+    total_variation = np.abs(np.diff(matrix, axis=1)).sum(axis=1)
+    entropy = -np.sum(matrix * np.log(np.clip(matrix, 1e-15, 1.0)), axis=1)
+    sorted_probability = np.sort(matrix, axis=1)[:, ::-1]
+    effective_width_80 = (np.cumsum(sorted_probability, axis=1) < 0.8).sum(axis=1) + 1
+    return {
+        "mean_local_peaks": float(np.mean(local_peaks)),
+        "share_multimodal": float(np.mean(local_peaks > 1)),
+        "mean_total_variation": float(np.mean(total_variation)),
+        "mean_entropy": float(np.mean(entropy)),
+        "mean_effective_width_80": float(np.mean(effective_width_80)),
+        "mean_max_probability": float(np.mean(matrix.max(axis=1))),
+    }
+
+
+def cumulative_crossing_diagnostics(cumulative: np.ndarray) -> dict[str, float]:
+    """Measure violations of P(Y<=k) <= P(Y<=k+1)."""
+    cdf = np.asarray(cumulative, dtype=float)
+    violations = np.diff(cdf, axis=1) < 0
+    magnitudes = np.maximum(-np.diff(cdf, axis=1), 0.0)
+    return {
+        "crossing_pair_count": int(violations.sum()),
+        "rows_with_crossing": int(violations.any(axis=1).sum()),
+        "share_rows_with_crossing": float(violations.any(axis=1).mean()),
+        "mean_crossings_per_row": float(violations.sum(axis=1).mean()),
+        "maximum_crossing_magnitude": float(magnitudes.max()),
+        "mean_crossing_magnitude_when_present": float(
+            magnitudes[violations].mean() if violations.any() else 0.0
+        ),
     }
 
 
