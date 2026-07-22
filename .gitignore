@@ -13,3 +13,18 @@ data_processed/
 *.csv
 *.parquet
 *.docx
+# Downloaded transfer bundles
+*.zip
+
+# Intermediate probabilistic-model outputs
+outputs/figures_08/
+outputs/figures_09/01_driver_distribution_diagnostics.png
+outputs/figures_09/distribution_shape_diagnostics.json
+
+# Superseded article figures; final versions are tracked under final/
+outputs/article_probabilistic_forecasting/01_model_selection_tradeoff.png
+outputs/article_probabilistic_forecasting/02_2024_holdout_comparison.png
+outputs/article_probabilistic_forecasting/03_smooth_coherent_heatmap.png
+outputs/article_probabilistic_forecasting/04_driver_distribution_examples.png
+outputs/article_probabilistic_forecasting/05_win_podium_points_probabilities.png
+outputs/article_probabilistic_forecasting/06_expected_finish_uncertainty.png
