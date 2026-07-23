@@ -1,0 +1,24 @@
+{
+  "status": "FROZEN_BEFORE_2024_CHALLENGER_EVALUATION",
+  "selected_model": "PROPORTIONAL_ODDS_BALANCED",
+  "estimator": "ProportionalOddsLogit",
+  "features": "FULL_FEATURES",
+  "training_window_for_holdout": "2014-2023",
+  "holdout": 2024,
+  "race_coherence": "Sinkhorn balancing",
+  "probability_floor": 1e-06,
+  "selection_data": "Rolling-origin validation seasons 2018-2023 only",
+  "selection_rule": {
+    "maximum_rps_degradation": 0.02,
+    "minimum_log_loss_improvement": 0.05,
+    "maximum_multimodal_share": 0.05,
+    "maximum_coherence_error": 1e-08
+  },
+  "observed_tradeoff": {
+    "rps_degradation_pct": 1.3111915406925467,
+    "log_loss_improvement_pct": 10.792681837937435,
+    "expected_mae_improvement_pct": 1.9959656664276793,
+    "multimodal_share": 0.0
+  },
+  "known_limitation": "Correlated predictors prevent reliable Hessian inversion and coefficient standard errors; model selection is predictive, not inferential."
+}

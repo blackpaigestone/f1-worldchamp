@@ -1,0 +1,100 @@
+{
+  "frozen_model": {
+    "status": "FROZEN_BEFORE_2024_CHALLENGER_EVALUATION",
+    "selected_model": "PROPORTIONAL_ODDS_BALANCED",
+    "estimator": "ProportionalOddsLogit",
+    "features": "FULL_FEATURES",
+    "training_window_for_holdout": "2014-2023",
+    "holdout": 2024,
+    "race_coherence": "Sinkhorn balancing",
+    "probability_floor": 1e-06,
+    "selection_data": "Rolling-origin validation seasons 2018-2023 only",
+    "selection_rule": {
+      "maximum_rps_degradation": 0.02,
+      "minimum_log_loss_improvement": 0.05,
+      "maximum_multimodal_share": 0.05,
+      "maximum_coherence_error": 1e-08
+    },
+    "observed_tradeoff": {
+      "rps_degradation_pct": 1.3111915406925467,
+      "log_loss_improvement_pct": 10.792681837937435,
+      "expected_mae_improvement_pct": 1.9959656664276793,
+      "multimodal_share": 0.0
+    },
+    "known_limitation": "Correlated predictors prevent reliable Hessian inversion and coefficient standard errors; model selection is predictive, not inferential."
+  },
+  "2024_metrics": [
+    {
+      "model": "Qualifying baseline",
+      "rps": 0.09614590511053527,
+      "log_loss": 2.5389092619975053,
+      "expected_position_mae": 2.9992046136509463,
+      "modal_position_accuracy": 0.15866388308977036,
+      "win_brier": 0.034588868922753556,
+      "podium_brier": 0.07021063258382633,
+      "points_brier": 0.12955354843385394,
+      "mean_local_peaks": 2.7244258872651357,
+      "share_multimodal": 0.8580375782881002,
+      "mean_total_variation": 0.25562819433861833,
+      "mean_entropy": 2.634106402805045,
+      "mean_effective_width_80": 10.217118997912317,
+      "mean_max_probability": 0.1330299130837983,
+      "max_row_error": 9.093903408086135e-11,
+      "mean_row_error": 2.999097606770779e-11,
+      "max_column_error": 4.440892098500626e-16,
+      "mean_column_error": 1.0870450909169069e-16
+    },
+    {
+      "model": "Previous independent model",
+      "rps": 0.09760427040883554,
+      "log_loss": 2.62709952549282,
+      "expected_position_mae": 3.1061460396822795,
+      "modal_position_accuracy": 0.1524008350730689,
+      "win_brier": 0.04274983879191158,
+      "podium_brier": 0.07830022283909005,
+      "points_brier": 0.1301440278944154,
+      "mean_local_peaks": 5.528183716075157,
+      "share_multimodal": 1.0,
+      "mean_total_variation": 0.4826724139333681,
+      "mean_entropy": 2.4986183314485855,
+      "mean_effective_width_80": 9.060542797494781,
+      "mean_max_probability": 0.17476871244121717,
+      "max_row_error": 9.689249402811129e-11,
+      "mean_row_error": 2.8702312621284258e-11,
+      "max_column_error": 4.440892098500626e-16,
+      "mean_column_error": 1.2261126931664047e-16
+    },
+    {
+      "model": "Frozen proportional odds",
+      "rps": 0.09530811100372076,
+      "log_loss": 2.5606685876026427,
+      "expected_position_mae": 2.8868165898825113,
+      "modal_position_accuracy": 0.1524008350730689,
+      "win_brier": 0.04053405025422705,
+      "podium_brier": 0.08484047143984717,
+      "points_brier": 0.12316675404939434,
+      "mean_local_peaks": 1.0,
+      "share_multimodal": 0.0,
+      "mean_total_variation": 0.21730783472550455,
+      "mean_entropy": 2.6142733157687568,
+      "mean_effective_width_80": 9.778705636743215,
+      "mean_max_probability": 0.13370610942955813,
+      "max_row_error": 9.928224908861694e-11,
+      "mean_row_error": 2.4881609183127536e-11,
+      "max_column_error": 4.440892098500626e-16,
+      "mean_column_error": 1.1264475782209314e-16
+    }
+  ],
+  "race_visualized": {
+    "raceId": 1144,
+    "race_name": "Abu Dhabi Grand Prix"
+  },
+  "figures": [
+    "01_model_selection_tradeoff.png",
+    "02_2024_holdout_comparison.png",
+    "03_smooth_coherent_heatmap.png",
+    "04_driver_distribution_examples.png",
+    "05_win_podium_points_probabilities.png",
+    "06_expected_finish_uncertainty.png"
+  ]
+}
